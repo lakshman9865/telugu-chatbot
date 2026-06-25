@@ -2,50 +2,67 @@ import streamlit as st
 from google import genai
 import os
 
-# 1. This sets up the title and look of our web page
-st.set_page_config(page_title="Telugu Tone Bot", page_icon="💬")
-st.title("💬 Telugu-English Tone Translator")
-st.write("Type casual Telugu to see the real meaning and emotion!")
+# 1. Page Title and Interface Setup
+st.set_page_config(page_title="Any Language Translator", page_icon="🌐", layout="centered")
+st.title("🌐 Any-to-Any Tone Translator")
+st.write("Select your starting language and your target language, then type your message!")
 
-# 2. Look for the key hidden inside the computer's secret environment variables
+# 2. Check for the Secret Key
 API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if not API_KEY:
     st.error("⚠️ API Key is missing! Make sure you set the GEMINI_API_KEY environment variable.")
 else:
-    # Connect to the AI brain
     client = genai.Client(api_key=API_KEY)
 
-    ROBOT_RULES = """
-    You are a real-time chat translator bot.
-    Take casual Telugu or phonetic Telugu (written in English letters like 'nuvu ela unavu') 
-    and translate it into natural, friendly, conversational English.
+    # 3. INTERFACE UPGRADE: Two Dropdown Selectors Side-by-Side
+    # We use st.columns(2) to create two neat columns on the screen
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        from_language = st.selectbox(
+            "Translate FROM:",
+            ["Auto-Detect", "Telugu", "Telugu (English Script / Phonetic)", "English", "Hindi", "Spanish", "French", "Japanese", "Tamil"]
+        )
+        
+    with col2:
+        to_language = st.selectbox(
+            "Translate INTO:",
+            ["English", "Telugu", "Telugu (English Script / Phonetic)", "Hindi", "Spanish", "French", "Japanese", "Tamil"]
+        )
 
-    CRITICAL RULE: Do not translate literally word-for-word. Look for the hidden emotion, 
-    slang, or friendship context.
+    # 4. We feed BOTH choices dynamically into the AI rules
+    ROBOT_RULES = f"""
+    You are a real-time conversational chat translator bot.
+    The user wants to translate a phrase from {from_language} into natural, fluid {to_language}.
 
-    Always answer in this exact format:
-    **English:** [Natural English translation here]
-    **Vibe:** [The emotion here, like Friendly, Sarcastic, Excited, Angry]
+    CRITICAL RULE: Never translate literally word-for-word. Look for the hidden emotion, 
+    street slang, friendship context, or cultural intensity of that specific speaker.
+
+    Always output your response in this exact format:
+    **Original Language:** [Specify the actual input language used]
+    **Translation ({to_language}):** [The natural translation here]
+    **Vibe:** [The emotion here, like Friendly, Sarcastic, Angry, Excited, Sad]
     """
 
-    # 3. Memory Box
+    # 5. Initialize Chat History Memory
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Show past messages
+    # Display past chat bubbles
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # 4. Chat Input
-    if user_prompt := st.chat_input("Type your Telugu sentence here..."):
+    # 6. Read User Messages in Real-Time
+    if user_prompt := st.chat_input("Type your message here..."):
         with st.chat_message("user"):
             st.markdown(user_prompt)
         st.session_state.messages.append({"role": "user", "content": user_prompt})
 
+        # Process via the AI engine
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
+            with st.spinner("Translating tone..."):
                 try:
                     response = client.models.generate_content(
                         model='gemini-2.5-flash',
