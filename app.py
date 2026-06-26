@@ -81,6 +81,6 @@ else:
                     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
                 except Exception as e:
                     if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                        st.warning("😴 The API limits are full for now, but any phrases we already translated today will still work instantly!")
+                        st.warning("😴 The AI brain is taking a nap because we used up today's free limits! Please try again in a little while.")
                     else:
                         st.error(f"Something went wrong: {e}")
