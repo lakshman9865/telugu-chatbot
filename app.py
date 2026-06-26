@@ -65,7 +65,7 @@ else:
             with st.spinner("Translating tone..."):
                 try:
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-1.5-flash',
                         contents=user_prompt,
                         config=genai.types.GenerateContentConfig(
                             system_instruction=ROBOT_RULES,
@@ -76,4 +76,7 @@ else:
                     st.markdown(bot_reply)
                     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
                 except Exception as e:
-                    st.error(f"Something went wrong: {e}")
+                    if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                        st.warning("😴 The AI brain is taking a nap because we used up today's free limits! Please try again in a little while.")
+                    else:
+                        st.error(f"Something went wrong: {e}")
